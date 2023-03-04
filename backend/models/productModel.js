@@ -22,6 +22,7 @@ const productSchema = mongoose.Schema(
     category: {
       type: mongoose.Types.ObjectId,
       required: [true, "please select a category for product"],
+      ref: "Category",
     },
   },
   { timestamps: true }

@@ -1,10 +1,13 @@
 const createError = require("http-errors");
 
 const Product = require("../models/productModel");
+const Category = require("../models/categoryModel");
 
 const getAllProduct = async (req, res, next) => {
   try {
-    const products = await Product.find();
+    const products = await Product.find()
+      .sort({ createdAt: -1 })
+      .populate("category", "_id name status");
 
     res.status(200).json({
       message: "success",
@@ -18,6 +21,22 @@ const getAllProduct = async (req, res, next) => {
 
 const getSingleProduct = async (req, res, next) => {
   try {
+    const id = req.params.id;
+
+    if (!id) {
+      res.status(400);
+      next(createError("paremeter not found"));
+    } else {
+      const product = await Product.findById(id).populate(
+        "category",
+        "_id name status"
+      );
+
+      res.status(200).json({
+        message: "success",
+        data: product,
+      });
+    }
   } catch (error) {
     res.status(500);
     next(createError(error));
@@ -28,13 +47,15 @@ const addProduct = async (req, res, next) => {
   try {
     const { name, price, description, images, category } = req.body;
 
-    const product = await Product.create({
+    let product = await Product.create({
       name,
       price,
       description,
       images,
       category,
     });
+
+    product = await product.populate("category", "_id name status");
 
     res.status(201).json({
       message: "success",
@@ -65,7 +86,7 @@ const editProduct = async (req, res, next) => {
           category,
         },
         { new: true }
-      );
+      ).populate("category", "_id name status");
 
       res.status(200).json({
         message: "success",
