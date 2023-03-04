@@ -11,6 +11,9 @@ const app = express();
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
+// static file
+app.use(express.static("./public"));
+
 // app routes
 
 app.get("/", (req, res, next) => {

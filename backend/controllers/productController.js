@@ -1,4 +1,5 @@
 const createError = require("http-errors");
+const fs = require("fs");
 
 const Product = require("../models/productModel");
 const Category = require("../models/categoryModel");
@@ -51,7 +52,7 @@ const addProduct = async (req, res, next) => {
       name,
       price,
       description,
-      images,
+      images: req?.files?.map((file) => file.link),
       category,
     });
 
@@ -62,6 +63,18 @@ const addProduct = async (req, res, next) => {
       data: product,
     });
   } catch (error) {
+    if (req.files) {
+      req.files.forEach((file) => {
+        fs.unlink(
+          `${__dirname}/../public/uploads/images/${file.subFolder}/${file.filename}`,
+          (err) => {
+            if (err) {
+              console.log(err);
+            }
+          }
+        );
+      });
+    }
     res.status(500);
     next(createError(error));
   }

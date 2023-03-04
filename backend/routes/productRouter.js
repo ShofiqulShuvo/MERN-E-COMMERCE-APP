@@ -6,6 +6,7 @@ const {
   editProduct,
   deleteProduct,
 } = require("../controllers/productController");
+const { multipleUpload } = require("../middlewares/imageUploader");
 
 const router = express.Router();
 
@@ -16,7 +17,7 @@ router.get("/", getAllProduct);
 router.get("/:id", getSingleProduct);
 
 // add a product
-router.post("/", addProduct);
+router.post("/", multipleUpload("images", 4, "products"), addProduct);
 
 // edit a product
 router.put("/:id", editProduct);

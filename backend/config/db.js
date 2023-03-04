@@ -6,7 +6,9 @@ const connectDB = () => {
   mongoose
     .connect(process.env.MONGO_URI)
     .then((c) => {
-      console.log(`connected with Database host: ${c.connection.host}`);
+      console.log(
+        `connected with Database host: ${c.connection.host} port: ${c.connection.port}`
+      );
     })
     .catch((err) => {
       console.log(err);

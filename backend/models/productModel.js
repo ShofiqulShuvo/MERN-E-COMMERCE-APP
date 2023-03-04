@@ -17,7 +17,7 @@ const productSchema = mongoose.Schema(
       required: [true, "please enter some description for product"],
     },
     images: {
-      type: String,
+      type: Array,
     },
     category: {
       type: mongoose.Types.ObjectId,
