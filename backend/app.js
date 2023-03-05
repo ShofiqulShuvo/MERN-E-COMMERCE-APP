@@ -2,8 +2,10 @@
 const express = require("express");
 
 // internal import
-const productRoute = require("./routes/productRouter");
-const categoryRoutes = require("./routes/categoryRoutes");
+const userRouter = require("./routes/userRouter");
+const productRouter = require("./routes/productRouter");
+const categoryRouter = require("./routes/categoryRouter");
+
 const { notFound, errorHandler } = require("./middlewares/errorMiddlewares");
 
 // express setup
@@ -20,10 +22,13 @@ app.get("/", (req, res, next) => {
   res.status(200).send("Welcome to my e-commerce api");
 });
 
+// user route
+app.use("/api/user", userRouter);
+
 // category route
-app.use("/api/category", categoryRoutes);
+app.use("/api/category", categoryRouter);
 // product route
-app.use("/api/products", productRoute);
+app.use("/api/products", productRouter);
 
 // error handle
 

@@ -52,7 +52,9 @@ const addProduct = async (req, res, next) => {
       name,
       price,
       description,
-      images: req?.files?.map((file) => file.link),
+      images: req?.files?.map((file) => {
+        return { filename: file.filename, link: file.link };
+      }),
       category,
     });
 
