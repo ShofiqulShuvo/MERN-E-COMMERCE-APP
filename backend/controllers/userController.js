@@ -5,6 +5,7 @@ const fs = require("fs");
 const User = require("../models/userModel");
 const { generateToken } = require("../config/generateToken");
 
+// adding a user
 const addUser = async (req, res, next) => {
   try {
     const { name, email, mobile, password, role, status } = req.body;
@@ -47,6 +48,7 @@ const addUser = async (req, res, next) => {
   }
 };
 
+// login user
 const loginUser = async (req, res, next) => {
   try {
     const { email, password } = req.body;
@@ -86,6 +88,7 @@ const loginUser = async (req, res, next) => {
   }
 };
 
+// get all user
 const getAllUser = async (req, res, next) => {
   try {
     const users = await User.find().select("-password").sort({ createdAt: -1 });
@@ -100,6 +103,7 @@ const getAllUser = async (req, res, next) => {
   }
 };
 
+// get single user
 const getSingleUser = async (req, res, next) => {
   try {
     const id = req.params.id;
@@ -121,6 +125,7 @@ const getSingleUser = async (req, res, next) => {
   }
 };
 
+// update a user
 const updateUser = async (req, res, next) => {
   try {
     const id = req.params.id;
@@ -175,6 +180,7 @@ const updateUser = async (req, res, next) => {
   }
 };
 
+// delete a user
 const deleteUser = async (req, res, next) => {
   try {
     const id = req.params.id;
