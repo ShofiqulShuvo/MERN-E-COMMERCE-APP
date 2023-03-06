@@ -1,6 +1,6 @@
 import { useDispatch } from "react-redux";
 import { BASE_URL } from "../api/api";
-import { login, logout } from "../app/features/adminAuth";
+import { login, logout } from "../app/features/adminAuthSlice";
 
 const useAdminAuth = () => {
   const dispatch = useDispatch();

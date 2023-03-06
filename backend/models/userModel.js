@@ -41,6 +41,10 @@ const userSchema = mongoose.Schema(
       },
       default: "active",
     },
+    updateBy: {
+      type: mongoose.Types.ObjectId,
+      ref: "User",
+    },
   },
   { timestamps: true }
 );

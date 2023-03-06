@@ -1,114 +1,37 @@
-import React, { useState } from "react";
+import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { toast } from "react-toastify";
-import { BASE_URL, putConfigureJsonToken } from "../../api/api";
-import { updateProfile } from "../../app/features/adminAuthSlice";
+import { useParams } from "react-router-dom";
+import { getSingleUser } from "../../app/features/UsersSlice";
+import ErrorMessage from "../../components/ErrorMessage";
+import Spiner from "../../components/Spiner";
 import ProfilePic from "../../assets/profile.png";
 import { dateConverter } from "../../utility/dateConverter";
 
-const Profile = () => {
+const UserSingle = () => {
+  const { id } = useParams();
+
   const dispatch = useDispatch();
-  const { profileInfo, token } = useSelector((state) => state.admin);
+  const { token } = useSelector((state) => state.admin);
+  const { singleUser, singleLoading, singleError } = useSelector(
+    (state) => state.users
+  );
 
-  const initialState = {
-    name: profileInfo.name ? profileInfo.name : "",
-    email: profileInfo.email ? profileInfo.email : "",
-    mobile: profileInfo.mobile ? profileInfo.mobile : "",
-    image: null,
-  };
+  useEffect(() => {
+    const contoler = new AbortController();
+    const signal = contoler.signal;
 
-  const [userInfo, setUserInfo] = useState(initialState);
+    dispatch(getSingleUser({ token, id, signal }));
 
-  const profileImage = profileInfo.image ? profileInfo.image.link : null;
-  const [userImage, setUserImage] = useState(profileImage);
+    return () => {
+      contoler.abort();
+    };
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setUserInfo((prev) => ({ ...prev, [name]: value }));
-  };
+    // eslint-disable-next-line
+  }, [id]);
 
-  const handleImageChange = (e) => {
-    if (!e.target.files || e.target.files.length === 0) {
-      setUserImage(profileImage);
-      setUserInfo((prev) => ({ ...prev, image: null }));
-    } else {
-      const file = e.target.files[0];
-      setUserImage(URL.createObjectURL(file));
-      setUserInfo((prev) => ({ ...prev, image: file }));
-    }
-  };
+  if (singleLoading) return <Spiner />;
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    const fromData = new FormData();
-
-    if (!userInfo.email || !userInfo.name || !userInfo.name) {
-      toast.dismiss();
-      toast.error("name , email, or mobile can\t be empty");
-    } else {
-      fromData.append("name", userInfo.name);
-      fromData.append("email", userInfo.email);
-      fromData.append("mobile", userInfo.mobile);
-      if (userInfo) {
-        fromData.append("image", userInfo.image);
-      }
-
-      dispatch(updateProfile([fromData, token, profileInfo._id]));
-    }
-  };
-
-  //   password change
-
-  const initialPassState = {
-    password: "",
-    newPassword: "",
-    renewPassword: "",
-  };
-  const [pass, setPass] = useState(initialPassState);
-
-  const handlePasswordChange = (e) => {
-    const { name, value } = e.target;
-    setPass((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
-
-  const handlePassChange = async (e) => {
-    e.preventDefault();
-
-    if (pass.newPassword !== pass.renewPassword) {
-      toast.dismiss();
-      toast.error("both new password should be same");
-    } else {
-      try {
-        toast.dismiss();
-        toast.info("changing password");
-
-        const updateData = {
-          password: pass.password,
-          newPassword: pass.newPassword,
-        };
-        const res = await fetch(
-          `${BASE_URL}/user/password/${profileInfo._id}`,
-          putConfigureJsonToken(updateData, token)
-        );
-        const data = await res.json();
-
-        if (!res.ok) {
-          throw new Error(data.message);
-        } else {
-          toast.dismiss();
-          toast.success("password change success");
-
-          setPass(initialPassState);
-        }
-      } catch (error) {
-        toast.dismiss();
-        toast.error(error.message);
-      }
-    }
-  };
+  if (singleError) return <ErrorMessage error={singleError} />;
 
   return (
     <>
@@ -118,13 +41,13 @@ const Profile = () => {
             <div className="card">
               <div className="card-body profile-card pt-4 d-flex flex-column align-items-center">
                 <img
-                  src={profileInfo.image ? profileInfo.image.link : ProfilePic}
+                  src={singleUser.image ? singleUser.image.link : ProfilePic}
                   alt=""
                   className="rounded-circle"
                   style={{ height: "100px", width: "100px" }}
                 />
-                <h2>{profileInfo.name}</h2>
-                <h3>{profileInfo.email}</h3>
+                <h2>{singleUser.name}</h2>
+                <h3>{singleUser.email}</h3>
               </div>
             </div>
           </div>
@@ -143,25 +66,25 @@ const Profile = () => {
                     </button>
                   </li>
 
-                  <li className="nav-item">
+                  {/* <li className="nav-item">
                     <button
-                      className="nav-link"
-                      data-bs-toggle="tab"
-                      data-bs-target="#profile-edit"
+                        className="nav-link"
+                        data-bs-toggle="tab"
+                        data-bs-target="#profile-edit"
                     >
-                      Edit Profile
+                        Edit Profile
                     </button>
-                  </li>
+                    </li> */}
 
-                  <li className="nav-item">
+                  {/* <li className="nav-item">
                     <button
-                      className="nav-link"
-                      data-bs-toggle="tab"
-                      data-bs-target="#profile-change-password"
+                        className="nav-link"
+                        data-bs-toggle="tab"
+                        data-bs-target="#profile-change-password"
                     >
-                      Change Password
+                        Change Password
                     </button>
-                  </li>
+                    </li> */}
                 </ul>
                 <div className="tab-content pt-2">
                   {/* profile detail */}
@@ -173,89 +96,114 @@ const Profile = () => {
 
                     <div className="row">
                       <div className="col-lg-3 col-md-4 label ">Name</div>
-                      <div className="col-lg-9 col-md-8">
-                        {profileInfo.name}
-                      </div>
+                      <div className="col-lg-9 col-md-8">{singleUser.name}</div>
                     </div>
 
                     <div className="row">
                       <div className="col-lg-3 col-md-4 label">Email</div>
                       <div className="col-lg-9 col-md-8">
-                        {profileInfo.email}
+                        {singleUser.email}
                       </div>
                     </div>
 
                     <div className="row">
                       <div className="col-lg-3 col-md-4 label">Mobile</div>
                       <div className="col-lg-9 col-md-8">
-                        {profileInfo.mobile}
+                        {singleUser.mobile}
                       </div>
                     </div>
 
                     <div className="row">
                       <div className="col-lg-3 col-md-4 label">Role</div>
+                      <div className="col-lg-9 col-md-8">{singleUser.role}</div>
+                    </div>
+
+                    <div className="row">
+                      <div className="col-lg-3 col-md-4 label">Status</div>
                       <div className="col-lg-9 col-md-8">
-                        {profileInfo.role}
+                        {singleUser.status}
                       </div>
                     </div>
 
                     <div className="row">
-                      <div className="col-lg-3 col-md-4 label">Join Date</div>
+                      <div className="col-lg-3 col-md-4 label">Joined</div>
                       <div className="col-lg-9 col-md-8">
-                        {dateConverter(profileInfo.createdAt)}
+                        {dateConverter(singleUser.createdAt)}
                       </div>
                     </div>
+
+                    {singleUser.updateBy && (
+                      <>
+                        <div className="row">
+                          <div className="col-lg-3 col-md-4 label">
+                            User Data Update At
+                          </div>
+                          <div className="col-lg-9 col-md-8">
+                            {dateConverter(singleUser.updatedAt)}
+                          </div>
+                        </div>
+
+                        <div className="row">
+                          <div className="col-lg-3 col-md-4 label">
+                            Update By
+                          </div>
+                          <div className="col-lg-9 col-md-8">
+                            {singleUser.updateBy.name}
+                          </div>
+                        </div>
+                      </>
+                    )}
                   </div>
 
                   {/*  Profile Edit  */}
-                  <div
+                  {/* <div
                     className="tab-pane fade profile-edit pt-3"
                     id="profile-edit"
-                  >
+                    >
                     <form onSubmit={handleSubmit}>
-                      <div className="row mb-3">
+                        <div className="row mb-3">
                         <label
-                          htmlFor="profileImage"
-                          className="col-md-4 col-lg-3 col-form-label"
+                            htmlFor="profileImage"
+                            className="col-md-4 col-lg-3 col-form-label"
                         >
-                          Profile Image
+                            Profile Image
                         </label>
                         <div className="col-md-8 col-lg-9">
-                          <img
+                            <img
                             src={userImage ? userImage : ProfilePic}
                             alt=""
-                          />
+                            />
                         </div>
-                      </div>
-
-                      <div className="row mb-3">
+                        </div>
+        
+                        <div className="row mb-3">
                         <label
-                          htmlFor="fullUserName"
-                          className="col-md-4 col-lg-3 col-form-label"
+                            htmlFor="fullUserName"
+                            className="col-md-4 col-lg-3 col-form-label"
                         >
-                          Change Image
+                            Change Image
                         </label>
                         <div className="col-md-8 col-lg-9">
-                          <input
+                            <input
                             type="file"
                             id="fullUserName"
                             className="form-control"
                             accept={"image/png" && "image/jpg" && "image/jpeg"}
                             name="image"
                             onChange={handleImageChange}
-                          />
+                            />
                         </div>
-                      </div>
-
-                      <div className="row mb-3">
+                        </div>
+        
+                        <div className="row mb-3">
                         <label
-                          htmlFor="fullName"
-                          className="col-md-4 col-lg-3 col-form-label"
+                            htmlFor="fullName"
+                            className="col-md-4 col-lg-3 col-form-label"
                         >
-                          Name
+                            Name
                         </label>
                         <div className="col-md-8 col-lg-9">
-                          <input
+                            <input
                             type="text"
                             id="fullName"
                             className="form-control"
@@ -263,19 +211,19 @@ const Profile = () => {
                             value={userInfo.name}
                             onChange={handleChange}
                             required
-                          />
+                            />
                         </div>
-                      </div>
-
-                      <div className="row mb-3">
+                        </div>
+        
+                        <div className="row mb-3">
                         <label
-                          htmlFor="profileEmail"
-                          className="col-md-4 col-lg-3 col-form-label"
+                            htmlFor="profileEmail"
+                            className="col-md-4 col-lg-3 col-form-label"
                         >
-                          Email
+                            Email
                         </label>
                         <div className="col-md-8 col-lg-9">
-                          <input
+                            <input
                             id="profileEmail"
                             type="text"
                             className="form-control"
@@ -283,19 +231,19 @@ const Profile = () => {
                             value={userInfo.email}
                             onChange={handleChange}
                             required
-                          />
+                            />
                         </div>
-                      </div>
-
-                      <div className="row mb-3">
+                        </div>
+        
+                        <div className="row mb-3">
                         <label
-                          htmlFor="profileMobile"
-                          className="col-md-4 col-lg-3 col-form-label"
+                            htmlFor="profileMobile"
+                            className="col-md-4 col-lg-3 col-form-label"
                         >
-                          Mobile
+                            Mobile
                         </label>
                         <div className="col-md-8 col-lg-9">
-                          <input
+                            <input
                             id="profileMobile"
                             type="text"
                             className="form-control"
@@ -303,88 +251,88 @@ const Profile = () => {
                             value={userInfo.mobile}
                             onChange={handleChange}
                             required
-                          />
+                            />
                         </div>
-                      </div>
-
-                      <div className="text-center">
+                        </div>
+        
+                        <div className="text-center">
                         <button type="submit" className="btn btn-primary">
-                          Save Changes
+                            Save Changes
                         </button>
-                      </div>
+                        </div>
                     </form>
-                  </div>
+                    </div> */}
 
                   {/* Change Password */}
-                  <div
+                  {/* <div
                     className="tab-pane fade pt-3"
                     id="profile-change-password"
-                  >
+                    >
                     <form onSubmit={handlePassChange}>
-                      <div className="row mb-3">
+                        <div className="row mb-3">
                         <label
-                          htmlFor="currentPassword"
-                          className="col-md-4 col-lg-3 col-form-label"
+                            htmlFor="currentPassword"
+                            className="col-md-4 col-lg-3 col-form-label"
                         >
-                          Current Password
+                            Current Password
                         </label>
                         <div className="col-md-8 col-lg-9">
-                          <input
+                            <input
                             type="password"
                             className="form-control"
                             id="currentPassword"
                             name="password"
                             value={pass.password}
                             onChange={handlePasswordChange}
-                          />
+                            />
                         </div>
-                      </div>
-
-                      <div className="row mb-3">
+                        </div>
+        
+                        <div className="row mb-3">
                         <label
-                          htmlFor="newPassword"
-                          className="col-md-4 col-lg-3 col-form-label"
+                            htmlFor="newPassword"
+                            className="col-md-4 col-lg-3 col-form-label"
                         >
-                          New Password
+                            New Password
                         </label>
                         <div className="col-md-8 col-lg-9">
-                          <input
+                            <input
                             id="newPassword"
                             type="password"
                             className="form-control"
                             name="newPassword"
                             value={pass.newPassword}
                             onChange={handlePasswordChange}
-                          />
+                            />
                         </div>
-                      </div>
-
-                      <div className="row mb-3">
+                        </div>
+        
+                        <div className="row mb-3">
                         <label
-                          htmlFor="renewPassword"
-                          className="col-md-4 col-lg-3 col-form-label"
+                            htmlFor="renewPassword"
+                            className="col-md-4 col-lg-3 col-form-label"
                         >
-                          Re-enter New Password
+                            Re-enter New Password
                         </label>
                         <div className="col-md-8 col-lg-9">
-                          <input
+                            <input
                             id="renewPassword"
                             type="password"
                             className="form-control"
                             name="renewPassword"
                             value={pass.renewPassword}
                             onChange={handlePasswordChange}
-                          />
+                            />
                         </div>
-                      </div>
-
-                      <div className="text-center">
+                        </div>
+        
+                        <div className="text-center">
                         <button type="submit" className="btn btn-primary">
-                          Change Password
+                            Change Password
                         </button>
-                      </div>
+                        </div>
                     </form>
-                  </div>
+                    </div> */}
                 </div>
               </div>
             </div>
@@ -395,4 +343,4 @@ const Profile = () => {
   );
 };
 
-export default Profile;
+export default UserSingle;

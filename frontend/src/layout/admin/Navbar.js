@@ -10,7 +10,7 @@ import {
 } from "react-icons/fa";
 import ProfilePic from "../../assets/profile.png";
 import { useDispatch, useSelector } from "react-redux";
-import { logout } from "../../app/features/adminAuth";
+import { logout } from "../../app/features/adminAuthSlice";
 
 const Navbar = ({ toggle, setToggle }) => {
   const dispatch = useDispatch();

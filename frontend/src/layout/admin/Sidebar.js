@@ -2,6 +2,7 @@ import React from "react";
 import { NavLink } from "react-router-dom";
 import {
   FaChartPie,
+  FaUsersCog,
   // FaChartBar,
   // FaAccusoft,
   // FaArrowDown,
@@ -15,11 +16,20 @@ const Sidebar = () => {
       <aside id="sidebar" className="sidebar">
         <ul className="sidebar-nav" id="sidebar-nav">
           <li className="nav-item">
-            <NavLink className="nav-link " to="/admin/dashboard" end>
+            <NavLink className="nav-link " to="/admin/dashboard">
               <span className="sidebar-nav-link-icon">
                 <FaChartPie />
               </span>
               <span>Dashboard</span>
+            </NavLink>
+          </li>
+
+          <li className="nav-item">
+            <NavLink className="nav-link " to="/admin/users">
+              <span className="sidebar-nav-link-icon">
+                <FaUsersCog />
+              </span>
+              <span>Users</span>
             </NavLink>
           </li>
 

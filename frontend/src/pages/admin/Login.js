@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { Navigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { BASE_URL, postConfigureJson } from "../../api/api";
-import { login } from "../../app/features/adminAuth";
+import { login } from "../../app/features/adminAuthSlice";
 
 const Login = () => {
   const dispatch = useDispatch();

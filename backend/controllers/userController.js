@@ -13,7 +13,24 @@ const addUser = async (req, res, next) => {
       res.status(400);
       next(createError("please enter required field"));
     } else {
+      const emailCheck = await User.findOne({ email });
+      const mobileCheck = await User.findOne({ mobile });
+
+      if (emailCheck) {
+        res.status(400);
+        next(createError("email already used by a user"));
+      }
+
+      if (mobileCheck) {
+        res.status(400);
+        next(createError("mobile number already used by a user"));
+      }
+
       const hashPass = await bcrypt.hash(password, 10);
+
+      const image = req.file
+        ? { filename: req.file.filename, link: req.file.link }
+        : undefined;
 
       const user = await User.create({
         name,
@@ -22,10 +39,7 @@ const addUser = async (req, res, next) => {
         role,
         status,
         password: hashPass,
-        image: {
-          filename: req?.file?.filename,
-          link: req?.file?.link,
-        },
+        image,
       });
 
       res.status(201).json({
@@ -108,7 +122,10 @@ const loginUserUsingToken = async (req, res, next) => {
 // get all user
 const getAllUser = async (req, res, next) => {
   try {
-    const users = await User.find().select("-password").sort({ createdAt: -1 });
+    const users = await User.find({ _id: { $ne: req.user._id } })
+      .populate("updateBy", "_id name email")
+      .select("-password")
+      .sort({ createdAt: -1 });
 
     res.status(200).json({
       message: "success",
@@ -129,7 +146,9 @@ const getSingleUser = async (req, res, next) => {
       res.status(400);
       next(createError("required data not found"));
     } else {
-      const user = await User.findOne().select("-password");
+      const user = await User.findOne({ _id: id })
+        .populate("updateBy", "name email _id")
+        .select("-password");
 
       res.status(200).json({
         message: "success",
@@ -155,7 +174,7 @@ const updateUser = async (req, res, next) => {
       const authUserId = authUser._id.valueOf();
 
       if (authUser.role === "admin" || authUserId === id) {
-        const { name, email, mobile } = req.body;
+        const { name, email, mobile, role, status } = req.body;
 
         const image = req.file
           ? { filename: req.file.filename, link: req.file.link }
@@ -170,11 +189,16 @@ const updateUser = async (req, res, next) => {
             email,
             mobile,
             image,
+            role,
+            status,
+            updateBy: authUserId,
           },
           { new: true }
-        ).select("-password");
+        )
+          .select("-password")
+          .populate("updateBy", "name _id email");
 
-        if (req.file) {
+        if (req.file && user.image) {
           const filePath = `${__dirname}/../public/uploads/images/users/${user.image.filename}`;
           fs.unlink(filePath, (err) => {
             if (err) {

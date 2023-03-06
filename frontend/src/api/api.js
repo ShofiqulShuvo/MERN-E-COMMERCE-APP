@@ -1,5 +1,16 @@
 export const BASE_URL = process.env.REACT_APP_SERVER_URL;
 
+export const getConfigureToken = (token, signal) => {
+  return {
+    method: "GET",
+    headers: {
+      "Content-type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    signal,
+  };
+};
+
 export const postConfigureJson = (data) => {
   return {
     method: "POST",
