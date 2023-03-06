@@ -1,5 +1,6 @@
 // external import
 const express = require("express");
+const cors = require("cors");
 
 // internal import
 const userRouter = require("./routes/userRouter");
@@ -10,6 +11,11 @@ const { notFound, errorHandler } = require("./middlewares/errorMiddlewares");
 
 // express setup
 const app = express();
+
+// cors setup
+app.use(cors());
+
+// express setup for from data
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 

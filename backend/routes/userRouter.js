@@ -8,6 +8,8 @@ const {
   getAllUser,
   getSingleUser,
   updateUser,
+  changePass,
+  loginUserUsingToken,
 } = require("../controllers/userController");
 
 const { singleUpload } = require("../middlewares/imageUploader");
@@ -20,6 +22,9 @@ router.post("/add", singleUpload("image", "users"), addUser);
 // user login
 router.post("/login", loginUser);
 
+// user login using token
+router.post("/tokenlogin", authUser, loginUserUsingToken);
+
 // get all user
 router.get("/", authUser, getAllUser);
 
@@ -28,6 +33,9 @@ router.get("/:id", authUser, getSingleUser);
 
 // update single user
 router.put("/:id", authUser, singleUpload("image", "users"), updateUser);
+
+// change Password
+router.put("/password/:id", authUser, changePass);
 
 // delete a user
 router.delete("/:id", authUser, userRoleAuth("admin"), deleteUser);

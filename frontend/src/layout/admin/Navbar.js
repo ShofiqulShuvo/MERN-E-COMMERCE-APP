@@ -9,15 +9,24 @@ import {
   // FaFacebookMessenger
 } from "react-icons/fa";
 import ProfilePic from "../../assets/profile.png";
+import { useDispatch, useSelector } from "react-redux";
+import { logout } from "../../app/features/adminAuth";
 
 const Navbar = ({ toggle, setToggle }) => {
+  const dispatch = useDispatch();
+  const { profileInfo } = useSelector((state) => state.admin);
+
   const [showSearch, setShowSearch] = useState(false);
+
+  const handleLogout = () => {
+    dispatch(logout());
+  };
   return (
     <header id="header" className="header fixed-top d-flex align-items-center">
       <div className="d-flex align-items-center justify-content-between">
         <Link to={"/admin"} className="logo d-flex align-items-center">
           <img src="assets/img/logo.png" alt="Logo" />
-          <span className="d-none d-lg-block">Admin Dashboard</span>
+          <span className="d-none d-lg-block">Dashboard</span>
         </Link>
         <button
           className="btn btn-sm border-0 toggle-sidebar-btn"
@@ -204,14 +213,19 @@ const Navbar = ({ toggle, setToggle }) => {
               className=" btn border-0 nav-link nav-profile d-flex align-items-center pe-0"
               data-bs-toggle="dropdown"
             >
-              <img src={ProfilePic} alt="" className="rounded-circle" />
+              <img
+                src={profileInfo.image ? profileInfo.image.link : ProfilePic}
+                alt=""
+                className="rounded-circle"
+                style={{ height: "35px", width: "35px" }}
+              />
               <span className="d-none d-md-block dropdown-toggle ps-2"></span>
             </button>
 
             <ul className="dropdown-menu dropdown-menu-end dropdown-menu-arrow profile">
               <li className="dropdown-header">
-                <h6>Kevin Anderson</h6>
-                <span>Web Designer</span>
+                <h6>{profileInfo.name}</h6>
+                <span>{profileInfo.email}</span>
               </li>
               <li>
                 <hr className="dropdown-divider" />
@@ -235,7 +249,7 @@ const Navbar = ({ toggle, setToggle }) => {
               <li>
                 <button
                   className="dropdown-item d-flex align-items-center"
-                  href="#"
+                  onClick={handleLogout}
                 >
                   <span className="nav-item-drop-icon">
                     <FaSignOutAlt />

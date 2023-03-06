@@ -1,9 +1,53 @@
-import React from "react";
-import { useSelector } from "react-redux";
+import React, { useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { Navigate } from "react-router-dom";
+import { toast } from "react-toastify";
+import { BASE_URL, postConfigureJson } from "../../api/api";
+import { login } from "../../app/features/adminAuth";
 
 const Login = () => {
+  const dispatch = useDispatch();
   const { isLoggedIn } = useSelector((state) => state.admin);
+
+  const initialState = { email: "", password: "" };
+  const [loginData, setLoginData] = useState(initialState);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setLoginData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!loginData.email || !loginData.password) {
+      toast.dismiss();
+      toast.error("please enter email and password");
+    } else {
+      try {
+        const res = await fetch(
+          `${BASE_URL}/user/login`,
+          postConfigureJson(loginData)
+        );
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.message);
+        } else {
+          dispatch(login(data));
+          toast.dismiss();
+          toast.success("login successfull");
+          setLoginData(initialState);
+        }
+      } catch (error) {
+        toast.dismiss();
+        toast.error(error.message);
+      }
+    }
+  };
 
   if (isLoggedIn === true) return <Navigate to={"/admin"} />;
 
@@ -26,7 +70,10 @@ const Login = () => {
                         </p>
                       </div>
 
-                      <form className="row g-3 needs-validation">
+                      <form
+                        className="row g-3 needs-validation"
+                        onSubmit={handleSubmit}
+                      >
                         <div className="col-12">
                           <label htmlFor="adminemail" className="form-label">
                             Email
@@ -34,9 +81,11 @@ const Login = () => {
                           <div className="input-group has-validation">
                             <input
                               type="email"
-                              name="username"
+                              name="email"
                               className="form-control"
                               id="adminemail"
+                              value={loginData.email}
+                              onChange={handleChange}
                               required
                             />
                           </div>
@@ -51,6 +100,8 @@ const Login = () => {
                             name="password"
                             className="form-control"
                             id="adminPassword"
+                            value={loginData.password}
+                            onChange={handleChange}
                             required
                           />
                         </div>

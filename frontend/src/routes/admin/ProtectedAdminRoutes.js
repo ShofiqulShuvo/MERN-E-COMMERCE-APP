@@ -7,7 +7,7 @@ const ProtectedAdminRoutes = () => {
 
   if (isLoggedIn === undefined) {
     return null;
-  } else if (isLoggedIn) {
+  } else if (isLoggedIn === true) {
     return <Outlet />;
   } else if (isLoggedIn === false) {
     return <Navigate to={"/admin/login"} />;

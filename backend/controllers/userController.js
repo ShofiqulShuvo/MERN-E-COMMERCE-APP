@@ -88,6 +88,23 @@ const loginUser = async (req, res, next) => {
   }
 };
 
+// login user using token
+const loginUserUsingToken = async (req, res, next) => {
+  try {
+    const user = req.user;
+    const token = generateToken(user._id);
+
+    res.status(200).json({
+      message: "success",
+      token: token,
+      data: user,
+    });
+  } catch (error) {
+    res.status(500);
+    next(createError(error));
+  }
+};
+
 // get all user
 const getAllUser = async (req, res, next) => {
   try {
@@ -140,6 +157,10 @@ const updateUser = async (req, res, next) => {
       if (authUser.role === "admin" || authUserId === id) {
         const { name, email, mobile } = req.body;
 
+        const image = req.file
+          ? { filename: req.file.filename, link: req.file.link }
+          : undefined;
+
         const user = await User.findOne({ _id: id });
 
         const updateUser = await User.findByIdAndUpdate(
@@ -148,10 +169,7 @@ const updateUser = async (req, res, next) => {
             name,
             email,
             mobile,
-            image: {
-              filename: req?.file?.filename,
-              link: req?.file?.link,
-            },
+            image,
           },
           { new: true }
         ).select("-password");
@@ -172,6 +190,46 @@ const updateUser = async (req, res, next) => {
       } else {
         res.status(403);
         next(createError("you don't have permision to perform this task "));
+      }
+    }
+  } catch (error) {
+    res.status(500);
+    next(createError(error));
+  }
+};
+
+// change password
+const changePass = async (req, res, next) => {
+  try {
+    const authUser = req.user;
+    const authUserId = authUser._id.valueOf();
+    const id = req.params.id;
+    const { password, newPassword } = req.body;
+
+    if (!id || !password || !newPassword) {
+      res.status(400);
+      next(createError("insuficient data"));
+    } else {
+      if (authUser.role === "admin" || authUserId === id) {
+        const user = await User.findOne({ _id: id });
+
+        const checkPass = await bcrypt.compare(password, user.password);
+
+        if (!checkPass) {
+          res.status(401);
+          next(createError("current password not matched"));
+        } else {
+          const hashPass = await bcrypt.hash(newPassword, 10);
+
+          const user = await User.findByIdAndUpdate(id, { password: hashPass });
+
+          res.status(201).json({
+            message: "success",
+          });
+        }
+      } else {
+        res.status(403);
+        next(createError("yo don\t have permision to perform this task"));
       }
     }
   } catch (error) {
@@ -210,8 +268,10 @@ const deleteUser = async (req, res, next) => {
 module.exports = {
   addUser,
   loginUser,
+  loginUserUsingToken,
   getAllUser,
   getSingleUser,
   updateUser,
+  changePass,
   deleteUser,
 };
