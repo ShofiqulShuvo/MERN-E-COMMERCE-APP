@@ -202,7 +202,7 @@ const updateUser = async (req, res, next) => {
           const filePath = `${__dirname}/../public/uploads/images/users/${user.image.filename}`;
           fs.unlink(filePath, (err) => {
             if (err) {
-              console.log(err);
+              console.log("file unlink error");
             }
           });
         }
@@ -275,7 +275,7 @@ const deleteUser = async (req, res, next) => {
       const filePath = `${__dirname}/../public/uploads/images/users/${user.image.filename}`;
       fs.unlink(filePath, (err) => {
         if (err) {
-          console.log(err);
+          console.log("file unlink error");
         }
       });
 

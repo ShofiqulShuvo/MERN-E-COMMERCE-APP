@@ -43,8 +43,8 @@ const UserSingle = () => {
                 <img
                   src={singleUser.image ? singleUser.image.link : ProfilePic}
                   alt=""
-                  className="rounded-circle"
-                  style={{ height: "100px", width: "100px" }}
+                  className="rounded-2"
+                  style={{ maxHeight: "150px", maxWidth: "150px" }}
                 />
                 <h2>{singleUser.name}</h2>
                 <h3>{singleUser.email}</h3>
