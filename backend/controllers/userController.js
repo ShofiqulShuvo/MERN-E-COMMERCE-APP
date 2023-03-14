@@ -12,41 +12,41 @@ const addUser = async (req, res, next) => {
     if (!name || !email || !password) {
       res.status(400);
       next(createError("please enter required field"));
-    } else {
-      const emailCheck = await User.findOne({ email });
-      const mobileCheck = await User.findOne({ mobile });
-
-      if (emailCheck) {
-        res.status(400);
-        next(createError("email already used by a user"));
-      }
-
-      if (mobileCheck) {
-        res.status(400);
-        next(createError("mobile number already used by a user"));
-      }
-
-      const hashPass = await bcrypt.hash(password, 10);
-
-      const image = req.file
-        ? { filename: req.file.filename, link: req.file.link }
-        : undefined;
-
-      const user = await User.create({
-        name,
-        email,
-        mobile,
-        role,
-        status,
-        password: hashPass,
-        image,
-      });
-
-      res.status(201).json({
-        message: "success",
-        data: user,
-      });
     }
+
+    const emailCheck = await User.findOne({ email });
+    const mobileCheck = await User.findOne({ mobile });
+
+    if (emailCheck) {
+      res.status(400);
+      next(createError("email already used by a user"));
+    }
+
+    if (mobileCheck) {
+      res.status(400);
+      next(createError("mobile number already used by a user"));
+    }
+
+    const hashPass = await bcrypt.hash(password, 10);
+
+    const image = req.file
+      ? { filename: req.file.filename, link: req.file.link }
+      : undefined;
+
+    const user = await User.create({
+      name,
+      email,
+      mobile,
+      role,
+      status,
+      password: hashPass,
+      image,
+    });
+
+    res.status(201).json({
+      message: "success",
+      data: user,
+    });
   } catch (error) {
     if (req.file) {
       const filePath = `${__dirname}/../public/uploads/images/${req.file.subFolder}/${req.file.filename}`;
@@ -67,35 +67,42 @@ const loginUser = async (req, res, next) => {
   try {
     const { email, password } = req.body;
 
+    // check req body have email and password
     if (!email || !password) {
       res.status(400);
       next(createError("please enter email & password"));
-    } else {
-      const user = await User.findOne({ email });
-
-      if (!user) {
-        res.status(401);
-        next(createError("invalid email or password"));
-      } else if (user.status === "blocked") {
-        res.status(401);
-        next(createError("Admin Blocked your account"));
-      } else {
-        const checkPass = await bcrypt.compare(password, user.password);
-
-        if (!checkPass) {
-          res.status(401);
-          next(createError("invalid email or password"));
-        } else {
-          const token = generateToken(user._id);
-
-          res.status(200).json({
-            message: "success",
-            token: token,
-            data: user,
-          });
-        }
-      }
     }
+
+    // find user
+    const user = await User.findOne({ email });
+
+    // if user not exist
+    if (!user) {
+      res.status(401);
+      next(createError("invalid email or password"));
+    }
+
+    // if user is blocked
+    if (user && user.status === "blocked") {
+      res.status(401);
+      next(createError("Admin Blocked your account"));
+    }
+
+    // checking password correct or not
+    const checkPass = await bcrypt.compare(password, user.password);
+    if (!checkPass) {
+      res.status(401);
+      next(createError("invalid email or password"));
+    }
+
+    // generate token and send data
+    const token = generateToken(user._id);
+
+    res.status(200).json({
+      message: "success",
+      token: token,
+      data: user,
+    });
   } catch (error) {
     res.status(500);
     next(createError(error));
@@ -122,7 +129,18 @@ const loginUserUsingToken = async (req, res, next) => {
 // get all user
 const getAllUser = async (req, res, next) => {
   try {
-    const users = await User.find({ _id: { $ne: req.user._id } })
+    const query = req.query
+      ? {
+          name: {
+            $regex: req.query.search,
+            $options: "i",
+            _id: { $ne: req.user._id },
+          },
+        }
+      : { _id: { $ne: req.user._id } };
+    const users = await User.find({
+      $or: [query],
+    })
       .populate("updateBy", "_id name email")
       .select("-password")
       .sort({ createdAt: -1 });
@@ -130,6 +148,46 @@ const getAllUser = async (req, res, next) => {
     res.status(200).json({
       message: "success",
       data: users,
+    });
+  } catch (error) {
+    res.status(500);
+    next(createError(error));
+  }
+};
+
+// const getUsers
+const getUsers = async (req, res, next) => {
+  try {
+    const page = req.query.page - 1 || 0;
+    const limit = req.query.limit || 5;
+    const search = req.query.search || "";
+
+    const users = await User.find({
+      _id: { $ne: req.user._id },
+      name: {
+        $regex: search,
+        $options: "i",
+      },
+    })
+      .populate("updateBy", "name email image")
+      .populate("updateBy", "_id name email")
+      .select("-password")
+      .skip(page * limit)
+      .limit(limit)
+      .sort({ createdAt: -1 });
+
+    const total = await User.countDocuments({
+      _id: { $ne: req.user._id },
+      name: {
+        $regex: search,
+        $options: "i",
+      },
+    });
+
+    res.status(200).json({
+      message: "success",
+      data: users,
+      total: total,
     });
   } catch (error) {
     res.status(500);
@@ -145,16 +203,16 @@ const getSingleUser = async (req, res, next) => {
     if (!id) {
       res.status(400);
       next(createError("required data not found"));
-    } else {
-      const user = await User.findOne({ _id: id })
-        .populate("updateBy", "name email _id")
-        .select("-password");
-
-      res.status(200).json({
-        message: "success",
-        data: user,
-      });
     }
+
+    const user = await User.findOne({ _id: id })
+      .populate("updateBy", "name email _id")
+      .select("-password");
+
+    res.status(200).json({
+      message: "success",
+      data: user,
+    });
   } catch (error) {
     res.status(500);
     next(createError(error));
@@ -233,28 +291,34 @@ const changePass = async (req, res, next) => {
     if (!id || !password || !newPassword) {
       res.status(400);
       next(createError("insuficient data"));
-    } else {
-      if (authUser.role === "admin" || authUserId === id) {
-        const user = await User.findOne({ _id: id });
+    }
 
-        const checkPass = await bcrypt.compare(password, user.password);
-
-        if (!checkPass) {
-          res.status(401);
-          next(createError("current password not matched"));
-        } else {
-          const hashPass = await bcrypt.hash(newPassword, 10);
-
-          const user = await User.findByIdAndUpdate(id, { password: hashPass });
-
-          res.status(201).json({
-            message: "success",
-          });
-        }
-      } else {
-        res.status(403);
-        next(createError("yo don\t have permision to perform this task"));
+    if (authUser.role === "admin" || authUserId === id) {
+      const user = await User.findOne({ _id: id });
+      if (!user) {
+        req.status(400);
+        next(createError("Invalid Request"));
       }
+
+      const checkPass = await bcrypt.compare(password, user.password);
+
+      if (!checkPass) {
+        res.status(401);
+        next(createError("current password not matched"));
+      }
+
+      const hashPass = await bcrypt.hash(newPassword, 10);
+
+      const updateUser = await User.findByIdAndUpdate(id, {
+        password: hashPass,
+      });
+
+      res.status(201).json({
+        message: "success",
+      });
+    } else {
+      res.status(403);
+      next(createError("you don\t have permision to perform this task"));
     }
   } catch (error) {
     res.status(500);
@@ -294,6 +358,7 @@ module.exports = {
   loginUser,
   loginUserUsingToken,
   getAllUser,
+  getUsers,
   getSingleUser,
   updateUser,
   changePass,

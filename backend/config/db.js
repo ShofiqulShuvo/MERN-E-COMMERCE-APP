@@ -14,4 +14,5 @@ const connectDB = () => {
       console.log(err);
     });
 };
+
 module.exports = connectDB;

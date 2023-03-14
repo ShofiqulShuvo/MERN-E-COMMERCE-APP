@@ -10,6 +10,7 @@ const {
   updateUser,
   changePass,
   loginUserUsingToken,
+  getUsers,
 } = require("../controllers/userController");
 
 const { singleUpload } = require("../middlewares/imageUploader");
@@ -26,7 +27,7 @@ router.post("/login", loginUser);
 router.post("/tokenlogin", authUser, loginUserUsingToken);
 
 // get all user
-router.get("/", authUser, getAllUser);
+router.get("/", authUser, getUsers);
 
 // get single user
 router.get("/:id", authUser, getSingleUser);
