@@ -10,9 +10,9 @@ const { createSlice, createAsyncThunk } = require("@reduxjs/toolkit");
 
 export const getUsers = createAsyncThunk(
   "users/getUsers",
-  async ({ token, signal }) => {
+  async ({ token, signal, page, search, limit }) => {
     const res = await fetch(
-      `${BASE_URL}/user`,
+      `${BASE_URL}/user?page=${page}&limit=${limit}&search=${search}`,
       getConfigureToken(token, signal)
     );
     const data = await res.json();
@@ -80,6 +80,7 @@ const usersSlice = createSlice({
   initialState: {
     loading: true,
     users: null,
+    total: 0,
     error: false,
     singleLoading: true,
     singleUser: null,
@@ -93,8 +94,9 @@ const usersSlice = createSlice({
       }
     });
     builder.addCase(getUsers.fulfilled, (state, action) => {
-      const { data } = action.payload;
+      const { data, total } = action.payload;
       state.loading = false;
+      state.total = total;
       state.error = false;
       state.users = data;
     });

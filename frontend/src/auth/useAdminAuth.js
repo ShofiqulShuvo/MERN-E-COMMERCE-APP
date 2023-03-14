@@ -8,20 +8,26 @@ const useAdminAuth = () => {
   const token = JSON.parse(localStorage.getItem("mern-ecommerce-admin-token"));
 
   const checkToken = async () => {
-    const res = await fetch(`${BASE_URL}/user/tokenlogin`, {
-      method: "POST",
-      headers: {
-        "Content-type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    try {
+      const res = await fetch(`${BASE_URL}/user/tokenlogin`, {
+        method: "POST",
+        headers: {
+          "Content-type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
-    const data = await res.json();
+      const data = await res.json();
 
-    if (!res.ok || data.message === "jwt expired") {
-      dispatch(logout);
-    } else {
+      if (!res.ok || data.message === "jwt expired") {
+        throw new Error();
+      }
+
       dispatch(login(data));
+    } catch (error) {
+      if (error) {
+        dispatch(logout());
+      }
     }
   };
 
